@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MacroRecorder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  /* ── Edit these to customise ── */
+  :root {
+    --bg:        #0e0e11;
+    --bg2:       #16161b;
+    --bg3:       #1f1f27;
+    --border:    #2a2a36;
+    --fg:        #ececf4;
+    --fg2:       #7a7a96;
+    --red:       #e05c5c;
+    --green:     #5ccc82;
+    --blue:      #5b9cf6;
+    --amber:     #f0a840;
+    --teal:      #3ec8bf;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── Grain overlay ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 180px;
+    pointer-events: none;
+  }
+
+  /* ── Layout ── */
+  .container { max-width: 960px; margin: 0 auto; padding: 0 32px; position: relative; z-index: 1; }
+
+  /* ── Nav ── */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 32px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(14,14,17,0.85);
+    backdrop-filter: blur(12px);
+  }
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 18px;
+    letter-spacing: -0.5px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .nav-logo .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--red);
+    animation: breathe 2.4s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.4; transform: scale(0.7); }
+  }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a {
+    color: var(--fg2); text-decoration: none; font-size: 13px;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--fg); }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 110px 0 80px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+  }
+  .hero-tag {
+    display: inline-block;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--green);
+    border: 1px solid rgba(92,204,130,0.25);
+    padding: 4px 12px; border-radius: 2px;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 52px; font-weight: 800;
+    line-height: 1.08; letter-spacing: -2px;
+    margin-bottom: 22px;
+  }
+  .hero h1 span { color: var(--red); }
+  .hero p {
+    color: var(--fg2); font-size: 15px; line-height: 1.8;
+    margin-bottom: 36px; max-width: 440px;
+  }
+  .btn-group { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 24px; border-radius: 4px;
+    font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500;
+    text-decoration: none; cursor: pointer; border: none;
+    transition: all 0.18s;
+  }
+  .btn-primary {
+    background: var(--red); color: #fff;
+  }
+  .btn-primary:hover { background: #d44; transform: translateY(-1px); }
+  .btn-outline {
+    background: transparent; color: var(--fg);
+    border: 1px solid var(--border);
+  }
+  .btn-outline:hover { border-color: var(--fg2); background: var(--bg3); }
+
+  /* ── Hero visual ── */
+  .hero-visual {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    font-size: 12px;
+    animation: fadeup 0.7s 0.2s both;
+  }
+  @keyframes fadeup {
+    from { opacity:0; transform:translateY(16px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  .window-bar {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 16px; padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .window-bar .circle { width:10px; height:10px; border-radius:50%; }
+  .c-r { background: #e05c5c; }
+  .c-y { background: #f0a840; }
+  .c-g { background: #5ccc82; }
+  .window-bar span { margin-left: 8px; color: var(--fg2); font-size: 11px; }
+  .log-line { display: flex; gap: 10px; margin-bottom: 6px; }
+  .log-ts  { color: var(--fg2); min-width: 90px; }
+  .log-click  { color: var(--blue); }
+  .log-key    { color: var(--green); }
+  .log-scroll { color: var(--teal); }
+  .log-sys    { color: var(--fg2); }
+  .cursor { display: inline-block; width: 7px; height: 14px;
+            background: var(--fg); animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+
+  /* ── Section ── */
+  section { padding: 80px 0; }
+  .section-label {
+    font-size: 11px; font-weight: 500; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--fg2);
+    margin-bottom: 14px;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 34px; font-weight: 800; letter-spacing: -1px;
+    margin-bottom: 48px;
+  }
+
+  /* ── Features grid ── */
+  .features { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; }
+  .feature {
+    background: var(--bg2);
+    padding: 28px 24px;
+    transition: background 0.2s;
+  }
+  .feature:hover { background: var(--bg3); }
+  .feature-icon {
+    font-size: 22px; margin-bottom: 14px;
+    display: block;
+  }
+  .feature h3 { font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+  .feature p  { font-size: 13px; color: var(--fg2); line-height: 1.7; }
+
+  /* ── Hotkeys ── */
+  .hotkeys { display: grid; grid-template-columns: repeat(2,1fr); gap: 2px; }
+  .hotkey {
+    background: var(--bg2); padding: 20px 24px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  kbd {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px; font-weight: 500;
+    background: var(--bg3); color: var(--amber);
+    border: 1px solid var(--border);
+    padding: 5px 10px; border-radius: 4px;
+    min-width: 52px; text-align: center;
+    white-space: nowrap;
+  }
+  .hotkey p { font-size: 13px; color: var(--fg2); }
+
+  /* ── Download ── */
+  .download-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 48px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
+  }
+  .download-box h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px; font-weight: 800; letter-spacing: -0.8px;
+    margin-bottom: 12px;
+  }
+  .download-box p { color: var(--fg2); font-size: 13px; line-height: 1.8; }
+  .requirements { margin-top: 24px; }
+  .req {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12px; color: var(--fg2); margin-bottom: 8px;
+  }
+  .req::before { content: '—'; color: var(--border); }
+  .steps { display: flex; flex-direction: column; gap: 12px; }
+  .step {
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+  .step-num {
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px;
+    color: var(--border); line-height: 1; min-width: 28px;
+  }
+  .step-txt { font-size: 13px; color: var(--fg2); padding-top: 3px; }
+  .step-txt strong { color: var(--fg); font-weight: 500; }
+
+  /* ── Footer ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  footer p { font-size: 12px; color: var(--fg2); }
+  footer a { color: var(--fg2); text-decoration: none; }
+  footer a:hover { color: var(--fg); }
+
+  /* ── Divider ── */
+  hr { border: none; border-top: 1px solid var(--border); }
+
+  /* ── Animations ── */
+  .fade-in {
+    opacity: 0; transform: translateY(20px);
+    animation: fadeup 0.6s ease forwards;
+  }
+  .fade-in:nth-child(1) { animation-delay: 0.0s; }
+  .fade-in:nth-child(2) { animation-delay: 0.1s; }
+  .fade-in:nth-child(3) { animation-delay: 0.2s; }
+  .fade-in:nth-child(4) { animation-delay: 0.3s; }
+  .fade-in:nth-child(5) { animation-delay: 0.4s; }
+  .fade-in:nth-child(6) { animation-delay: 0.5s; }
+
+  /* ── Responsive ── */
+  @media (max-width: 760px) {
+    .hero { grid-template-columns: 1fr; gap: 40px; padding: 70px 0 50px; }
+    .hero h1 { font-size: 36px; }
+    .features { grid-template-columns: 1fr; }
+    .hotkeys  { grid-template-columns: 1fr; }
+    .download-box { grid-template-columns: 1fr; gap: 32px; padding: 28px; }
+    nav { padding: 16px 20px; }
+    .nav-links { gap: 16px; }
+    .container { padding: 0 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Nav ── -->
+<nav>
+  <div class="nav-logo">
+    <div class="dot"></div>
+    MacroRecorder
+  </div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#hotkeys">Hotkeys</a>
+    <a href="#download">Download</a>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<div class="container">
+  <div class="hero">
+    <div>
+      <div class="hero-tag fade-in">Open Source · Windows · macOS</div>
+      <h1 class="fade-in">Record.<br>Replay.<br><span>Automate.</span></h1>
+      <p class="fade-in">
+        A high-performance mouse and keyboard macro recorder with
+        millisecond-precise playback, a full GUI, timeline editor,
+        and dry-run preview mode.
+      </p>
+      <div class="btn-group fade-in">
+        <!-- ↓ Change href to your actual download link -->
+        <a class="btn btn-primary" href="#download">↓ Download .exe</a>
+        <a class="btn btn-outline" href="#features">See features</a>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="window-bar">
+        <div class="circle c-r"></div>
+        <div class="circle c-y"></div>
+        <div class="circle c-g"></div>
+        <span>macro_recorder — recording</span>
+      </div>
+      <div class="log-line"><span class="log-ts">[   142.0ms]</span><span class="log-click">click  left   (834,512)</span></div>
+      <div class="log-line"><span class="log-ts">[   398.3ms]</span><span class="log-key">key    Key.ctrl</span></div>
+      <div class="log-line"><span class="log-ts">[   401.1ms]</span><span class="log-key">key    c</span></div>
+      <div class="log-line"><span class="log-ts">[   780.5ms]</span><span class="log-click">click  left   (200,340)</span></div>
+      <div class="log-line"><span class="log-ts">[  1203.8ms]</span><span class="log-key">key    Key.ctrl</span></div>
+      <div class="log-line"><span class="log-ts">[  1206.2ms]</span><span class="log-key">key    v</span></div>
+      <div class="log-line"><span class="log-ts">[  1594.0ms]</span><span class="log-scroll">scroll (0,-3) @ (200,340)</span></div>
+      <div class="log-line"><span class="log-ts">[  2011.4ms]</span><span class="log-sys">── playback complete ──</span></div>
+      <div class="log-line"><span class="log-ts">            </span><span><span class="cursor"></span></span></div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ── Features ── -->
+<section id="features">
+  <div class="container">
+    <div class="section-label">What it does</div>
+    <div class="section-title">Everything you need.</div>
+    <div class="features">
+      <div class="feature fade-in">
+        <span class="feature-icon">⏱</span>
+        <h3>Sub-millisecond timing</h3>
+        <p>Hybrid sleep + spin-wait playback engine hits timing targets within 0.1ms regardless of system load.</p>
+      </div>
+      <div class="feature fade-in">
+        <span class="feature-icon">◎</span>
+        <h3>Dry-run preview</h3>
+        <p>See exactly where every click will land before committing. A transparent overlay flashes ripples on screen.</p>
+      </div>
+      <div class="feature fade-in">
+        <span class="feature-icon">⟳</span>
+        <h3>Loop &amp; chain</h3>
+        <p>Run a macro up to 20× with a configurable delay between loops. Chain multiple macros into a sequence.</p>
+      </div>
+      <div class="feature fade-in">
+        <span class="feature-icon">✂</span>
+        <h3>Timeline editor</h3>
+        <p>Drag events to adjust timing, delete individual events, edit click coordinates — all without re-recording.</p>
+      </div>
+      <div class="feature fade-in">
+        <span class="feature-icon">⇱</span>
+        <h3>Relative coordinates</h3>
+        <p>Record positions relative to a chosen anchor so macros work even when the target window has moved.</p>
+      </div>
+      <div class="feature fade-in">
+        <span class="feature-icon">🔍</span>
+        <h3>Image anchoring</h3>
+        <p>Use OpenCV template matching to find UI elements on screen and auto-correct click positions at playback time.</p>
+      </div>
+      <div class="feature fade-in">
+        <span class="feature-icon">⚡</span>
+        <h3>Conditional branching</h3>
+        <p>Insert pixel-colour or template-match conditions that pause playback if the screen state doesn't match.</p>
+      </div>
+      <div class="feature fade-in">
+        <span class="feature-icon">🪟</span>
+        <h3>Window guard</h3>
+        <p>Bind a macro to a window title — playback skips loops automatically if that window isn't in focus.</p>
+      </div>
+      <div class="feature fade-in">
+        <span class="feature-icon">⚠</span>
+        <h3>Panic key</h3>
+        <p>Shift+Esc kills playback instantly and suppresses all output for 2 seconds — a hard brake if things go wrong.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+<!-- ── Hotkeys ── -->
+<section id="hotkeys">
+  <div class="container">
+    <div class="section-label">Global hotkeys</div>
+    <div class="section-title">Work anywhere.</div>
+    <div class="hotkeys">
+      <div class="hotkey">
+        <kbd>F9</kbd>
+        <p>Start recording mouse and keyboard input</p>
+      </div>
+      <div class="hotkey">
+        <kbd>F10</kbd>
+        <p>Stop recording and review captured events</p>
+      </div>
+      <div class="hotkey">
+        <kbd>F11</kbd>
+        <p>Play back the last recording or loaded macro</p>
+      </div>
+      <div class="hotkey">
+        <kbd>F12</kbd>
+        <p>Stop playback immediately</p>
+      </div>
+      <div class="hotkey">
+        <kbd>Shift+Esc</kbd>
+        <p>Panic — kill playback and suppress all input for 2s</p>
+      </div>
+      <div class="hotkey">
+        <kbd>Right-click</kbd>
+        <p>Context menu on any saved macro in the panel</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+<!-- ── Download ── -->
+<section id="download">
+  <div class="container">
+    <div class="section-label">Get started</div>
+    <div class="section-title">Download.</div>
+    <div class="download-box">
+      <div>
+        <h2>MacroRecorder.exe</h2>
+        <p>
+          Single-file executable for Windows. No installation, no Python, no dependencies —
+          just download and run.
+        </p>
+        <div class="requirements">
+          <div class="req">Windows 10 or 11 (64-bit)</div>
+          <div class="req">No installation required</div>
+          <div class="req">~35 MB standalone file</div>
+          <div class="req">Accessibility permission may be required on first run</div>
+        </div>
+        <br>
+        <!-- ↓ Replace href with your real download URL -->
+        <a class="btn btn-primary" href="MacroRecorder.exe" download>↓ Download for Windows</a>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-txt">Download <strong>MacroRecorder.exe</strong> — no installer needed</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-txt">Double-click to launch. Allow Accessibility if prompted by Windows</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-txt">Press <strong>F9</strong> anywhere to start recording your first macro</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-txt">Press <strong>F10</strong> to stop, then <strong>F11</strong> to replay</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<div class="container">
+  <footer>
+    <p>MacroRecorder — built with Python + tkinter + pynput</p>
+    <!-- ↓ Add your links here -->
+    <p><a href="https://github.com/Username1234hio/MacroRecorder">Source code</a> &nbsp;·&nbsp; <a href="#">Report a bug</a></p>
+  </footer>
+</div>
+
+</body>
+</html>
